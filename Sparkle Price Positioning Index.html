@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACI Electrical — Price Positioning Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── THEME TOKENS ── */
+[data-theme="light"] {
+  --bg-grad-a:   #c8dff0;
+  --bg-grad-b:   #e8f0fb;
+  --bg-grad-c:   #d0e8f5;
+  --glass-bg:    rgba(255,255,255,0.55);
+  --glass-bg-h:  rgba(255,255,255,0.75);
+  --glass-border:rgba(255,255,255,0.70);
+  --glass-shadow:rgba(21,96,130,0.14);
+  --glass-deep:  rgba(255,255,255,0.30);
+  --header-glass:rgba(255,255,255,0.40);
+  --text:        #0d2233;
+  --text-sec:    #3a5468;
+  --text-muted:  #6b8499;
+  --accent:      #156082;
+  --accent-lt:   #6FAEFE;
+  --freq-bg:     rgba(255,255,255,0.45);
+  --toggle-bg:   rgba(21,96,130,0.15);
+  --search-bg:   rgba(255,255,255,0.70);
+  --no-res-icon: rgba(21,96,130,0.25);
+}
+[data-theme="dark"] {
+  --bg-grad-a:   #04111d;
+  --bg-grad-b:   #071e30;
+  --bg-grad-c:   #091523;
+  --glass-bg:    rgba(255,255,255,0.06);
+  --glass-bg-h:  rgba(255,255,255,0.12);
+  --glass-border:rgba(255,255,255,0.12);
+  --glass-shadow:rgba(0,0,0,0.40);
+  --glass-deep:  rgba(255,255,255,0.04);
+  --header-glass:rgba(5,20,35,0.55);
+  --text:        #e8f4fd;
+  --text-sec:    #9bbfd6;
+  --text-muted:  #5f8aaa;
+  --accent:      #6FAEFE;
+  --accent-lt:   #9ecfff;
+  --freq-bg:     rgba(255,255,255,0.05);
+  --toggle-bg:   rgba(111,174,254,0.15);
+  --search-bg:   rgba(255,255,255,0.08);
+  --no-res-icon: rgba(111,174,254,0.25);
+}
+
+/* ── BASE ── */
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, var(--bg-grad-a) 0%, var(--bg-grad-b) 50%, var(--bg-grad-c) 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+  transition: background .4s ease, color .3s ease;
+}
+
+/* ── FLOATING ORBS (background ambiance) ── */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity .4s;
+}
+body::before {
+  width: 600px; height: 600px;
+  top: -100px; right: -150px;
+  background: radial-gradient(circle, rgba(21,96,130,0.18), transparent 70%);
+}
+body::after {
+  width: 500px; height: 500px;
+  bottom: -100px; left: -100px;
+  background: radial-gradient(circle, rgba(111,174,254,0.12), transparent 70%);
+}
+[data-theme="dark"] body::before { background: radial-gradient(circle, rgba(111,174,254,0.10), transparent 70%); }
+[data-theme="dark"] body::after  { background: radial-gradient(circle, rgba(21,96,130,0.18), transparent 70%); }
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: var(--header-glass);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 30px var(--glass-shadow);
+  transition: background .4s;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 36px;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.site-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .3px;
+  flex-shrink: 0;
+  line-height: 1.25;
+}
+.site-title span {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.header-spacer { flex: 1; }
+
+/* Search */
+.search-wrap { position: relative; }
+.search-wrap svg.search-icon {
+  position: absolute;
+  left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color .2s;
+}
+#searchInput {
+  background: var(--search-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 9px 18px 9px 38px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  color: var(--text);
+  width: 230px;
+  outline: none;
+  transition: width .25s ease, background .2s, border-color .2s, box-shadow .2s;
+}
+#searchInput:focus {
+  width: 290px;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(111,174,254,0.18);
+  background: var(--glass-bg-h);
+}
+#searchInput::placeholder { color: var(--text-muted); }
+
+/* Clear search button */
+#clearSearch {
+  position: absolute;
+  right: 11px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); padding: 2px;
+  display: none;
+  line-height: 0;
+  transition: color .15s;
+}
+#clearSearch:hover { color: var(--text); }
+
+/* Theme toggle */
+.theme-toggle {
+  background: var(--toggle-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 7px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-sec);
+  transition: background .2s, border-color .2s, transform .1s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+.theme-toggle:hover {
+  background: var(--glass-bg-h);
+  transform: scale(1.03);
+}
+.theme-icon { font-size: 14px; line-height: 1; }
+
+/* ── MAIN ── */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 36px 64px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── GLASS PANEL MIXIN (used for sections & frequent) ── */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+
+/* ── FREQUENT SECTION ── */
+#frequentSection {
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: none;
+  border-left: 3px solid var(--accent);
+}
+#frequentSection h2 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  color: var(--text-muted);
+  margin-bottom: 13px;
+}
+#frequentList { display: flex; flex-wrap: wrap; gap: 8px; }
+.freq-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--glass-deep);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 6px 14px 6px 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  backdrop-filter: blur(8px);
+}
+.freq-chip:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(21,96,130,0.3);
+}
+.freq-count {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.freq-chip:hover .freq-count { background: rgba(255,255,255,0.3); }
+
+/* ── CATEGORY SECTION ── */
+.cat-section { margin-bottom: 26px; }
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 13px;
+  padding-left: 4px;
+}
+.cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 16px 6px 10px;
+  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 10px var(--glass-shadow);
+}
+.cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cat-name { font-size: 12.5px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; }
+.cat-count { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: #fff; }
+
+/* ── CARDS GRID ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+/* ── SHEET CARD ── */
+.sheet-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.30);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease, background .2s, border-color .2s;
+  position: relative;
+}
+.sheet-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.sheet-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  background: var(--glass-bg-h);
+  border-color: rgba(255,255,255,0.80);
+  box-shadow: 0 16px 40px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.50);
+}
+.sheet-card:active { transform: translateY(-2px) scale(1.005); }
+
+.card-accent { height: 3px; flex-shrink: 0; }
+.card-body { padding: 15px 17px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.35; }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.usage-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color .2s;
+}
+.usage-badge.has-usage { color: var(--accent); }
+
+.open-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--glass-deep);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  transition: background .15s, color .15s, border-color .15s, transform .15s;
+  flex-shrink: 0;
+}
+.sheet-card:hover .open-arrow {
+  background: var(--cat-color, #156082);
+  border-color: transparent;
+  color: #fff;
+  transform: translate(1px, -1px);
+}
+
+/* ── SEARCH RESULTS ── */
+#searchResults { display: none; }
+.result-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+#searchResultsLabel {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-muted); margin-bottom: 13px;
+}
+.no-results {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted); font-size: 14px;
+}
+.no-results svg { margin-bottom: 14px; opacity: .3; }
+
+/* ── CATEGORY COLOR VARS ── */
+.gss  { --cat-color: #156082; }
+.acc  { --cat-color: #242867; }
+.lit  { --cat-color: #1c6b5e; }
+.fan  { --cat-color: #4e6688; }
+.ref  { --cat-color: #7a6530; }
+
+.cat-dot.gss  { background: #156082; }
+.cat-dot.acc  { background: #242867; }
+.cat-dot.lit  { background: #1c6b5e; }
+.cat-dot.fan  { background: #4e6688; }
+.cat-dot.ref  { background: #7a6530; }
+
+.cat-name.gss  { color: #156082; }
+.cat-name.acc  { color: #242867; }
+.cat-name.lit  { color: #1c6b5e; }
+.cat-name.fan  { color: #4e6688; }
+.cat-name.ref  { color: #7a6530; }
+
+[data-theme="dark"] .cat-name.gss  { color: #6FAEFE; }
+[data-theme="dark"] .cat-name.acc  { color: #9491ff; }
+[data-theme="dark"] .cat-name.lit  { color: #5ecfb8; }
+[data-theme="dark"] .cat-name.fan  { color: #8bafd4; }
+[data-theme="dark"] .cat-name.ref  { color: #d4b76a; }
+
+.cat-count.gss { background: #156082; }
+.cat-count.acc { background: #242867; }
+.cat-count.lit { background: #1c6b5e; }
+.cat-count.fan { background: #4e6688; }
+.cat-count.ref { background: #7a6530; }
+
+.card-accent.gss { background: linear-gradient(90deg, #156082, #6FAEFE); }
+.card-accent.acc { background: linear-gradient(90deg, #242867, #7a73d1); }
+.card-accent.lit { background: linear-gradient(90deg, #1c6b5e, #5ecfb8); }
+.card-accent.fan { background: linear-gradient(90deg, #4e6688, #8bafd4); }
+.card-accent.ref { background: linear-gradient(90deg, #7a6530, #d4b76a); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-deep);
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .header-inner { padding: 0 16px; gap: 12px; }
+  .site-title font-size { font-size: 14px; }
+  main { padding: 20px 14px 48px; }
+  #searchInput { width: 160px; }
+  #searchInput:focus { width: 200px; }
+  .theme-toggle span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <div class="site-title">
+      ACI Electrical
+      <span>Price Positioning Index</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search sheets…" autocomplete="off">
+      <button id="clearSearch" title="Clear">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <span class="theme-icon" id="themeIcon">☀️</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- Frequent Usage -->
+  <section id="frequentSection" class="glass-panel">
+    <h2>⚡ Frequently Opened</h2>
+    <div id="frequentList"></div>
+  </section>
+
+  <!-- Search results -->
+  <div id="searchResults">
+    <div id="searchResultsLabel"></div>
+    <div class="result-list" id="resultList"></div>
+    <div class="no-results" id="noResults" style="display:none;">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div>No sheets match that search.</div>
+    </div>
+  </div>
+
+  <!-- Category sections -->
+  <div id="categorySections">
+
+    <!-- GSS -->
+    <section class="cat-section">
+      <div class="cat-header">
+        <div class="cat-pill">
+          <div class="cat-dot gss"></div>
+          <span class="cat-name gss">GSS</span>
+          <span class="cat-count gss">10</span>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-gss">
+        <!-- cards injected by JS -->
+      </div>
+    </section>
+
+    <!-- Other Accessories -->
+    <section class="cat-section">
+      <div class="cat-header">
+        <div class="cat-pill">
+          <div class="cat-dot acc"></div>
+          <span class="cat-name acc">Other Accessories</span>
+          <span class="cat-count acc">5</span>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-acc"></div>
+    </section>
+
+    <!-- Lighting -->
+    <section class="cat-section">
+      <div class="cat-header">
+        <div class="cat-pill">
+          <div class="cat-dot lit"></div>
+          <span class="cat-name lit">Lighting</span>
+          <span class="cat-count lit">9</span>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-lit"></div>
+    </section>
+
+    <!-- Fan -->
+    <section class="cat-section">
+      <div class="cat-header">
+        <div class="cat-pill">
+          <div class="cat-dot fan"></div>
+          <span class="cat-name fan">Fan</span>
+          <span class="cat-count fan">3</span>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-fan"></div>
+    </section>
+
+    <!-- Reference Files -->
+    <section class="cat-section">
+      <div class="cat-header">
+        <div class="cat-pill">
+          <div class="cat-dot ref"></div>
+          <span class="cat-name ref">Reference Files</span>
+          <span class="cat-count ref">2</span>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-ref"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer>ACI Sparkle · Price Positioning Index · FY 2026-27</footer>
+
+<script>
+// ── DATA ──
+const SHEETS = [
+  // GSS
+  { id:'CePCgzDpgEwC_UMlR7kv54qGd6CjepARODvwfYvNzJo', name:'Falcon Series Price Positioning',   cat:'gss', url:'https://docs.google.com/spreadsheets/d/1CePCgzDpgEwC_UMlR7kv54qGd6CjepARODvwfYvNzJo/edit' },
+  { id:'EDkhi-tUETdQP-Paymwya0U5mOdWA37_gqNPmNJuSK4', name:'Gold Series Price Positioning',      cat:'gss', url:'https://docs.google.com/spreadsheets/d/1EDkhi-tUETdQP-Paymwya0U5mOdWA37_gqNPmNJuSK4/edit' },
+  { id:'LS2Lr1Y3IpAm-062kYsSiEu0eSrGevYeYyVLds0KPV0', name:'Marbello Price Positioning',         cat:'gss', url:'https://docs.google.com/spreadsheets/d/1LS2Lr1Y3IpAm-062kYsSiEu0eSrGevYeYyVLds0KPV0/edit' },
+  { id:'BvGG7Becf2OJdaxySM8nYMXEZ6WMCPk3bYcwU1udCw',  name:'Moslinno Series Price Positioning',  cat:'gss', url:'https://docs.google.com/spreadsheets/d/1_BvGG7Becf2OJdaxySM8nYMXEZ6WMCPk3bYcwU1udCw/edit' },
+  { id:'nqMpZ2UyG3H_4WiipCpAAjSiI6eP0ICEUiGG1t4S1cg', name:'Opera Price Positioning',            cat:'gss', url:'https://docs.google.com/spreadsheets/d/1nqMpZ2UyG3H_4WiipCpAAjSiI6eP0ICEUiGG1t4S1cg/edit' },
+  { id:'dJpEjZIyCXIhU9AhkOKeUj1mUxaDx4dc5yCipGSVBoc', name:'Platina Price Positioning',          cat:'gss', url:'https://docs.google.com/spreadsheets/d/1dJpEjZIyCXIhU9AhkOKeUj1mUxaDx4dc5yCipGSVBoc/edit' },
+  { id:'4FqOn5ETxkYsbI3sSRKQe41lgnwfUIxNURUjwzd2dWY', name:'Pro Series Price Positioning',       cat:'gss', url:'https://docs.google.com/spreadsheets/d/14FqOn5ETxkYsbI3sSRKQe41lgnwfUIxNURUjwzd2dWY/edit' },
+  { id:'ttMUBsmCMpplbUYL1jnYu2R590m1IXy4HAtCIIKdrYI', name:'Rosa Series Price Positioning',      cat:'gss', url:'https://docs.google.com/spreadsheets/d/1ttMUBsmCMpplbUYL1jnYu2R590m1IXy4HAtCIIKdrYI/edit' },
+  { id:'QHS-rJZXk6OnIaznRHJez6I9lyJuGre6rJfkl5_FjLA', name:'Smart Series Price Positioning',     cat:'gss', url:'https://docs.google.com/spreadsheets/d/1QHS-rJZXk6OnIaznRHJez6I9lyJuGre6rJfkl5_FjLA/edit' },
+  { id:'4oC9sMjhUb46A5ct7f1GmFBTNv3yBdIJj3A8VunIk3Q', name:'Ultra Series Price Positioning',     cat:'gss', url:'https://docs.google.com/spreadsheets/d/14oC9sMjhUb46A5ct7f1GmFBTNv3yBdIJj3A8VunIk3Q/edit' },
+  // Other Accessories
+  { id:'xk-YEXZs3wxM6Lzuj9YsonP5pKSdPVtbX-S4ElcGkYA', name:'8 Pin Price Positioning',            cat:'acc', url:'https://docs.google.com/spreadsheets/d/1xk-YEXZs3wxM6Lzuj9YsonP5pKSdPVtbX-S4ElcGkYA/edit' },
+  { id:'lLXowSpZ9wwrTtB7MGOe6PDIwGqSdpFA0HrFKX1X_HI', name:'Fan Capacitor Price Positioning',    cat:'acc', url:'https://docs.google.com/spreadsheets/d/1lLXowSpZ9wwrTtB7MGOe6PDIwGqSdpFA0HrFKX1X_HI/edit' },
+  { id:'KJOkYKJTeAWPTHotYhdhccnqf7KmrJ8Jro7Vz9IRI1M', name:'MCB Price Positioning',              cat:'acc', url:'https://docs.google.com/spreadsheets/d/1KJOkYKJTeAWPTHotYhdhccnqf7KmrJ8Jro7Vz9IRI1M/edit' },
+  { id:'zjvo6uTglwZpE7LxE5jCvMZp7WCT7rzazppV5Mrt998',  name:'PC Others Price Positioning',        cat:'acc', url:'https://docs.google.com/spreadsheets/d/1zjvo6uTglwZpE7LxE5jCvMZp7WCT7rzazppV5Mrt998/edit' },
+  { id:'N6XLXrAN0uwUDpTjuQ2My-HvpZww6y8FVJJSEN3xX_I', name:'Voltage Tester Price Positioning',   cat:'acc', url:'https://docs.google.com/spreadsheets/d/1N6XLXrAN0uwUDpTjuQ2My-HvpZww6y8FVJJSEN3xX_I/edit' },
+  // Lighting
+  { id:'h-V4zXa4gJHjSxR8dy4RJYQASTMSNLAofC7rckSnq7w', name:'Batten Tube Price Positioning',      cat:'lit', url:'https://docs.google.com/spreadsheets/d/1h-V4zXa4gJHjSxR8dy4RJYQASTMSNLAofC7rckSnq7w/edit' },
+  { id:'EVZANCVgytGPYs6mnruCvWiHL0POCc8JopAbLZyZ0-E', name:'ECO Plus Price Positioning',          cat:'lit', url:'https://docs.google.com/spreadsheets/d/1EVZANCVgytGPYs6mnruCvWiHL0POCc8JopAbLZyZ0-E/edit' },
+  { id:'9c4b92IuUVpo5jKUF3L7dfuAE7mrlC1YdwTNfecVQmc', name:'ECO Plus Price Positioning (v2)',     cat:'lit', url:'https://docs.google.com/spreadsheets/d/19c4b92IuUVpo5jKUF3L7dfuAE7mrlC1YdwTNfecVQmc/edit' },
+  { id:'KgYSxJr35Ae9eKfhQoHgRVVBja9vgHx7irhJHXjz9ok', name:'GLS Price Positioning',               cat:'lit', url:'https://docs.google.com/spreadsheets/d/1KgYSxJr35Ae9eKfhQoHgRVVBja9vgHx7irhJHXjz9ok/edit' },
+  { id:'AYl4X5gt5afahVPWKtYsZ5p41nDdhkJ_EowAEi8eF_o', name:'Hi-Power Price Positioning',          cat:'lit', url:'https://docs.google.com/spreadsheets/d/1AYl4X5gt5afahVPWKtYsZ5p41nDdhkJ_EowAEi8eF_o/edit' },
+  { id:'4rIbuMNX4VV4-bdhIhimNV5esnNvZux1Y1BP8qrwzoQ', name:'IPS Bulb Price Positioning',          cat:'lit', url:'https://docs.google.com/spreadsheets/d/14rIbuMNX4VV4-bdhIhimNV5esnNvZux1Y1BP8qrwzoQ/edit' },
+  { id:'QyFa70nFzMUf4Exl3Y8CeEPkVQuZsass1J9TgXo-tuk', name:'IPS NEO Price Positioning',           cat:'lit', url:'https://docs.google.com/spreadsheets/d/1QyFa70nFzMUf4Exl3Y8CeEPkVQuZsass1J9TgXo-tuk/edit' },
+  { id:'StoiyWBu_W2q2htP8xGwFKAhJOqL4I6yAor5OPNvP3o', name:'Panel Light Price Positioning',       cat:'lit', url:'https://docs.google.com/spreadsheets/d/1StoiyWBu_W2q2htP8xGwFKAhJOqL4I6yAor5OPNvP3o/edit' },
+  { id:'0JYBRvAa6xzRc3ZdVb-6ueW_vic_UA5_51UG6hk9WWA', name:'Prime Series Price Positioning',      cat:'lit', url:'https://docs.google.com/spreadsheets/d/10JYBRvAa6xzRc3ZdVb-6ueW_vic_UA5_51UG6hk9WWA/edit' },
+  // Fan
+  { id:'viv-MCoDQ6A_3oubLOky4e-NDZ--YKuvZmwfoxG0SKw',  name:'Exhaust Fan Price Positioning',       cat:'fan', url:'https://docs.google.com/spreadsheets/d/1viv-MCoDQ6A_3oubLOky4e-NDZ--YKuvZmwfoxG0SKw/edit' },
+  { id:'5zkYuuE8rn5_RwdzYC2NTSwFsEGvA74mnc1bmS9crL4', name:'Mosquito Bat Price Positioning',      cat:'fan', url:'https://docs.google.com/spreadsheets/d/15zkYuuE8rn5_RwdzYC2NTSwFsEGvA74mnc1bmS9crL4/edit' },
+  { id:'U4CqxuR1xwW4tfyb9nauZmuUtnRpjTXLHmamo5VoT6k', name:'RDF Price Positioning',               cat:'fan', url:'https://docs.google.com/spreadsheets/d/1U4CqxuR1xwW4tfyb9nauZmuUtnRpjTXLHmamo5VoT6k/edit' },
+  // Reference
+  { id:'BcSPz_vH2LrG7bzCwKkVF1Ztzp0rBaKJvwMQYCvex0A', name:'Probable COGS FY2026-27',            cat:'ref', url:'https://docs.google.com/spreadsheets/d/1BcSPz_vH2LrG7bzCwKkVF1Ztzp0rBaKJvwMQYCvex0A/edit' },
+  { id:'vr8VY2k8vB0X9Uq-MPCgierWqvTUu-VjraavBhBmWZs', name:'Source File',                         cat:'ref', url:'https://docs.google.com/spreadsheets/d/1vr8VY2k8vB0X9Uq-MPCgierWqvTUu-VjraavBhBmWZs/edit' },
+];
+
+const CAT_ICONS = { gss:'🔌', acc:'⚙️', lit:'💡', fan:'🌀', ref:'📁' };
+const STORAGE_KEY = 'sparkle_pp_usage_v2';
+
+// ── USAGE ──
+function getUsage() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); } catch { return {}; } }
+function saveUsage(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
+function recordClick(id) { const d=getUsage(); d[id]=(d[id]||0)+1; saveUsage(d); }
+
+// ── BUILD CARD ──
+function buildCard(sheet) {
+  const usage = getUsage()[sheet.id] || 0;
+  const card = document.createElement('a');
+  card.className = `sheet-card ${sheet.cat}`;
+  card.href = sheet.url;
+  card.target = '_blank';
+  card.rel = 'noopener';
+  card.dataset.id = sheet.id;
+  card.dataset.name = sheet.name;
+  card.dataset.cat = sheet.cat;
+
+  const usageHTML = usage > 0
+    ? `<span class="usage-badge has-usage"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Opened ${usage}×</span>`
+    : `<span class="usage-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Never opened</span>`;
+
+  card.innerHTML = `
+    <div class="card-accent ${sheet.cat}"></div>
+    <div class="card-body">
+      <div class="card-title">${sheet.name}</div>
+      <div class="card-footer">
+        ${usageHTML}
+        <div class="open-arrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+      </div>
+    </div>`;
+
+  card.addEventListener('click', () => {
+    recordClick(sheet.id);
+    setTimeout(() => { renderAll(); }, 120);
+  });
+  return card;
+}
+
+// ── RENDER ALL CARDS ──
+function renderAll() {
+  ['gss','acc','lit','fan','ref'].forEach(cat => {
+    const grid = document.getElementById('grid-' + cat);
+    if (!grid) return;
+    grid.innerHTML = '';
+    SHEETS.filter(s => s.cat === cat).forEach(s => grid.appendChild(buildCard(s)));
+  });
+  renderFrequent();
+}
+
+// ── RENDER FREQUENT ──
+function renderFrequent() {
+  const data = getUsage();
+  const sorted = Object.entries(data).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const section = document.getElementById('frequentSection');
+  const list = document.getElementById('frequentList');
+  if (!sorted.length) { section.style.display='none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = '';
+  sorted.forEach(([id, count]) => {
+    const sheet = SHEETS.find(s=>s.id===id);
+    if (!sheet) return;
+    const chip = document.createElement('a');
+    chip.className = 'freq-chip';
+    chip.href = sheet.url;
+    chip.target = '_blank';
+    chip.rel = 'noopener';
+    chip.innerHTML = `<span>${CAT_ICONS[sheet.cat]}</span>${sheet.name}<span class="freq-count">${count}</span>`;
+    chip.addEventListener('click', () => { recordClick(sheet.id); setTimeout(renderAll, 120); });
+    list.appendChild(chip);
+  });
+}
+
+// ── SEARCH ──
+const searchInput   = document.getElementById('searchInput');
+const clearBtn      = document.getElementById('clearSearch');
+const searchResults = document.getElementById('searchResults');
+const resultList    = document.getElementById('resultList');
+const noResults     = document.getElementById('noResults');
+const resultLabel   = document.getElementById('searchResultsLabel');
+const catSections   = document.getElementById('categorySections');
+const freqSection   = document.getElementById('frequentSection');
+
+function doSearch(q) {
+  if (!q) {
+    searchResults.style.display = 'none';
+    catSections.style.display = 'block';
+    clearBtn.style.display = 'none';
+    renderFrequent();
+    return;
+  }
+  clearBtn.style.display = 'block';
+  catSections.style.display = 'none';
+  freqSection.style.display = 'none';
+  searchResults.style.display = 'block';
+
+  const matches = SHEETS.filter(s => s.name.toLowerCase().includes(q.toLowerCase()));
+  resultList.innerHTML = '';
+  if (!matches.length) {
+    noResults.style.display = 'block';
+    resultLabel.textContent = '';
+  } else {
+    noResults.style.display = 'none';
+    resultLabel.textContent = `${matches.length} result${matches.length>1?'s':''} for "${q}"`;
+    matches.forEach(s => resultList.appendChild(buildCard(s)));
+  }
+}
+
+searchInput.addEventListener('input', () => doSearch(searchInput.value.trim()));
+clearBtn.addEventListener('click', () => { searchInput.value=''; doSearch(''); searchInput.focus(); });
+
+// ── THEME ──
+const themeIcon  = document.getElementById('themeIcon');
+const themeLabel = document.getElementById('themeLabel');
+const html = document.documentElement;
+
+function applyTheme(t) {
+  html.setAttribute('data-theme', t);
+  themeIcon.textContent  = t==='dark' ? '🌙' : '☀️';
+  themeLabel.textContent = t==='dark' ? 'Dark' : 'Light';
+  try { localStorage.setItem('sparkle_theme', t); } catch {}
+}
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  applyTheme(html.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+});
+
+// Restore saved theme
+try {
+  const saved = localStorage.getItem('sparkle_theme');
+  if (saved) applyTheme(saved);
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+} catch {}
+
+// ── INIT ──
+renderAll();
+</script>
+</body>
+</html>
